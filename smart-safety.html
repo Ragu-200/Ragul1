@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1456d6">
+<title>Smart Safety</title>
+<style>
+:root{
+  --blue:#1456d6; --blue-d:#0d3a99; --blue-l:#e8f0ff; --ink:#0f1b33; --muted:#5b6b88;
+  --line:#dbe4f5; --bg:#f4f8ff; --card:#ffffff; --red:#d92d20; --red-d:#b4180d;
+  --green:#12805c; --amber:#b45309; --radius:16px;
+  --font:"Segoe UI",system-ui,-apple-system,"Noto Sans Tamil","Latha","Nirmala UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45}
+body{min-height:100vh;display:flex;justify-content:center}
+button{font:inherit;cursor:pointer}
+a{color:var(--blue)}
+.app{width:100%;max-width:480px;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--bg)}
+header{position:sticky;top:0;z-index:20;background:var(--blue);color:#fff;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 10px;display:flex;align-items:center;gap:10px}
+header .logo{width:34px;height:34px;flex:none}
+header h1{font-size:18px;margin:0;font-weight:700;flex:1;line-height:1.1}
+header h1 small{display:block;font-weight:500;font-size:11px;opacity:.85}
+.pill{border:1.5px solid rgba(255,255,255,.7);background:transparent;color:#fff;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}
+.pill.on{background:#fff;color:var(--blue-d)}
+.banner{background:#fff4d6;color:#6b4400;border-bottom:1px solid #f0d58a;padding:8px 14px;font-size:13px;font-weight:600}
+main{flex:1;padding:14px 14px 100px}
+.screen{display:none}.screen.active{display:block}
+h2{font-size:20px;margin:6px 0 10px}
+h3{font-size:16px;margin:0 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.muted{color:var(--muted);font-size:14px}
+.row{display:flex;gap:10px;align-items:center}
+.grow{flex:1;min-width:0}
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;background:var(--blue);color:#fff}
+.btn.sec{background:var(--blue-l);color:var(--blue-d)}
+.btn.red{background:var(--red)}
+.btn.ghost{background:transparent;color:var(--blue-d);border:1.5px solid var(--line)}
+.btn.sm{padding:8px 12px;font-size:14px;border-radius:10px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible,.pill:focus-visible,.nav button:focus-visible,.sos:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffb703;outline-offset:2px}
+.sos-wrap{display:flex;flex-direction:column;align-items:center;padding:10px 0 4px}
+.sos{width:210px;height:210px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%,#ff6a5c,var(--red) 55%,var(--red-d));color:#fff;font-size:56px;font-weight:800;letter-spacing:2px;box-shadow:0 0 0 12px rgba(217,45,32,.13),0 0 0 26px rgba(217,45,32,.07),0 12px 28px rgba(217,45,32,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.sos small{font-size:13px;font-weight:600;letter-spacing:0;max-width:150px;line-height:1.2}
+.sos:active{transform:scale(.97)}
+@media (prefers-reduced-motion:no-preference){.sos{animation:pulse 2.4s ease-in-out infinite}}
+@keyframes pulse{50%{box-shadow:0 0 0 16px rgba(217,45,32,.16),0 0 0 34px rgba(217,45,32,.05),0 12px 28px rgba(217,45,32,.4)}}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px;text-align:left;display:flex;flex-direction:column;gap:4px;color:var(--ink)}
+.tile svg{width:26px;height:26px;color:var(--blue)}
+.tile b{font-size:15px}
+.tile span{font-size:12.5px;color:var(--muted)}
+.chip{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--blue-l);color:var(--blue-d)}
+.chip.g{background:#d8f3e8;color:var(--green)}.chip.a{background:#ffecc7;color:var(--amber)}.chip.r{background:#fde1de;color:var(--red-d)}
+label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px;color:var(--muted)}
+input,select{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;font:inherit;background:#fff;color:var(--ink)}
+.list{display:flex;flex-direction:column;gap:8px}
+.person{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--blue-l);color:var(--blue-d);font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px);z-index:30}
+.nav button{flex:1;border:0;background:transparent;padding:8px 2px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--muted)}
+.nav button svg{width:24px;height:24px}
+.nav button.active{color:var(--blue)}
+.tip{display:flex;gap:12px}
+.tip .n{flex:none;width:34px;height:34px;border-radius:10px;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center}
+.tip .n svg{width:20px;height:20px}
+.overlay{position:fixed;inset:0;background:rgba(10,20,45,.6);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow:auto}
+.count{font-size:96px;font-weight:800;color:var(--red);text-align:center;line-height:1}
+.map{width:100%;height:210px;border:0;border-radius:12px;background:var(--blue-l)}
+.msgbox{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px;font-size:13px;white-space:pre-wrap;word-break:break-word}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#0f1b33;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;z-index:70;max-width:90%;text-align:center}
+.hist{border-left:4px solid var(--blue);padding:8px 10px;background:#fff;border-radius:8px;border:1px solid var(--line);border-left-width:4px}
+.hist.c{border-left-color:#8a96ad}.hist.s{border-left-color:var(--green)}.hist.w{border-left-color:var(--amber)}
+.steps{margin:6px 0 0;padding-left:20px;font-size:14px}
+.steps li{margin-bottom:4px}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:5px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border:0}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.switch input{width:48px;height:28px;accent-color:var(--blue)}
+.note{font-size:12.5px;color:var(--muted);background:var(--blue-l);border-radius:10px;padding:9px 11px}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 6 10v13c0 11 7.6 19.4 18 22 10.4-2.6 18-11 18-22V10L24 3Z" fill="#fff"/><path d="M24 12v13M24 31v2" stroke="#d92d20" stroke-width="5" stroke-linecap="round"/></svg>
+    <h1 id="hTitle">Smart Safety<small id="hSub"></small></h1>
+    <button class="pill" id="demoBtn"></button>
+    <button class="pill" id="langBtn" aria-label="Language"></button>
+  </header>
+  <div class="banner" id="demoBanner" hidden></div>
+  <main>
+    <section class="screen" id="s-home"></section>
+    <section class="screen" id="s-contacts"></section>
+    <section class="screen" id="s-tips"></section>
+    <section class="screen" id="s-profile"></section>
+  </main>
+  <nav class="nav" id="nav"></nav>
+</div>
+<div id="overlay" class="overlay" hidden></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ============ Smart Safety — client-side prototype ============
+   Storage: localStorage (this device only). Firebase hooks are marked FIREBASE below.
+   Messages are NOT sent silently: the app opens SMS / WhatsApp / Share with the text
+   prepared, and only records "sent" when the user confirms it. */
+"use strict";
+const K="smartSafety_v1";
+const DEMO_LOC={lat:13.0500,lng:80.2824,acc:12,label:"Marina Beach, Chennai (demo)"};
+const DEMO_CONTACTS=[
+  {id:"d1",name:"Amma",phone:"+919000000001",rel:"Family"},
+  {id:"d2",name:"Karthik (Friend)",phone:"+919000000002",rel:"Friend"}
+];
+const NUMBERS={
+  IN:{name:"India",list:[["112","all","Unified emergency","அனைத்து அவசர உதவி"],["100","police","Police","காவல்துறை"],["108","ambulance","Ambulance","ஆம்புலன்ஸ்"],["101","fire","Fire","தீயணைப்பு"],["1091","women","Women helpline","பெண்கள் உதவி எண்"]]},
+  US:{name:"United States",list:[["911","all","Emergency","அவசர உதவி"]]},
+  UK:{name:"United Kingdom",list:[["999","all","Emergency","அவசர உதவி"]]},
+  EU:{name:"Europe / EU",list:[["112","all","Emergency","அவசர உதவி"]]}
+};
+const T={
+ en:{sub:"Personal Safety",home:"Home",contacts:"Contacts",tips:"Safety Tips",profile:"Profile",demo:"Demo",lang:"தமிழ்",
+ sosTap:"Tap to send alert",sosHint:"Starts a 5-second countdown you can cancel. Nothing is sent until you confirm in your messaging app.",
+ liveLoc:"Live location",liveLocSub:"Share on Google Maps",emgCall:"Emergency call",emgCallSub:"Dial local services",
+ shake:"Shake alert",shakeSub:"Optional, off by default",history:"Alert history",
+ addFirst:"Add a trusted contact first",addFirstBody:"SOS needs at least one trusted contact. You can still call emergency services below.",
+ trusted:"Trusted contacts",add:"Add contact",name:"Name",phone:"Phone (with country code)",rel:"Relationship",save:"Save",cancel:"Cancel",edit:"Edit",del:"Delete",
+ noContacts:"No contacts yet. Add family or friends who should get your alerts.",phoneBad:"Enter a valid phone number, for example +919876543210.",nameBad:"Enter a name.",
+ tipsTitle:"Personal safety tips",profileTitle:"Your profile",yourName:"Your name",yourPhone:"Your phone number",region:"Emergency numbers for",saved:"Saved",
+ prefs:"Preferences",histEmpty:"No alerts yet.",clear:"Clear history",
+ cd1:"Sending SOS in",cd2:"seconds",cancelSOS:"Cancel SOS",
+ locAsk:"Share your location?",locAskBody:"Smart Safety wants to read your GPS position once to add a Google Maps link to the alert. It stays on your device and goes only to people you choose.",allow:"Allow location",skipLoc:"Continue without location",
+ locating:"Finding your location…",locFail:"Location not available. The alert will say so.",
+ sendTitle:"Alert ready — send it now",sendBody:"Your phone cannot confirm delivery. Tap a channel for each person, send the message in that app, then mark it as sent.",
+ sms:"SMS",wa:"WhatsApp",shareBtn:"Share…",copy:"Copy message",copied:"Copied",markSent:"Mark as sent",markedSent:"You marked this as sent",opened:"Opened in app — not confirmed",pending:"Not sent yet",
+ done:"Done",call112:"Call emergency now",simSend:"Simulate sending (demo)",simDone:"Simulated only — nothing was sent",
+ stCancelled:"Cancelled before sending",stPrepared:"Prepared — not sent",stOpened:"Opened in messaging app — delivery not confirmed",stConfirmed:"You confirmed sending",stSim:"Demo — simulated, nothing sent",
+ shareLive:"Share my live location",stopLive:"Stop sharing",liveOn:"Live position updating on this device",openMaps:"Open in Google Maps",copyLink:"Copy link",
+ liveNote:"The link shows the position at the moment you share it. Continuous tracking for other people needs the Firebase backend (see README notes).",
+ gpsDenied:"Location permission was denied. You can enable it in your browser settings.",gpsNo:"This device or browser has no GPS support.",acc:"accuracy",
+ callTitle:"Emergency services",callNote:"Tapping a number opens your phone dialer. Check it is right for where you are.",
+ shakeTitle:"Shake to alert",shakeBody:"When on, shaking your phone hard three times starts the SOS countdown while this app is open. You can always cancel.",shakeOn:"Shake alert is on",shakeOff:"Shake alert is off",shakeNo:"Motion sensors are not available or permission was denied.",shakeAsk:"Allow motion access to turn this on.",shakeTrig:"Shake detected — starting SOS",
+ demoTitle:"Hackathon demo mode",demoBanner:"DEMO MODE — location is fake and nothing is sent to anyone.",
+ demoSteps:["Load the sample contacts (stored only in demo).","Tap the SOS button or “Simulate shake”.","Watch the countdown, then the alert with a Google Maps link.","Open Alert history to see the record, labelled Demo."],
+ loadSample:"Load sample contacts",simShake:"Simulate shake",exitDemo:"Exit demo",
+ aboutTitle:"How this prototype works",about:["Runs fully in the browser; data stays on this device.","GPS needs HTTPS or localhost, and your permission.","SMS and WhatsApp open with the text ready; you press send.","Firebase Auth and Firestore can be added for sign-in, sync and live tracking."],
+ msgHead:"SOS! I need help.",msgLoc:"My location",msgNoLoc:"My location could not be read.",msgAt:"Time",msgFrom:"From",
+ members:"contacts",none:"None"},
+ ta:{sub:"தனிப்பட்ட பாதுகாப்பு",home:"முகப்பு",contacts:"தொடர்புகள்",tips:"பாதுகாப்பு குறிப்புகள்",profile:"சுயவிவரம்",demo:"டெமோ",lang:"English",
+ sosTap:"எச்சரிக்கை அனுப்ப தொடவும்",sosHint:"ரத்து செய்யக்கூடிய 5 விநாடி எண்ணிக்கை தொடங்கும். நீங்கள் செய்தி செயலியில் உறுதி செய்யும் வரை எதுவும் அனுப்பப்படாது.",
+ liveLoc:"நேரடி இருப்பிடம்",liveLocSub:"Google Maps-இல் பகிர",emgCall:"அவசர அழைப்பு",emgCallSub:"அவசர சேவைகளை அழைக்க",
+ shake:"குலுக்கல் எச்சரிக்கை",shakeSub:"விருப்பத்தேர்வு, இயல்பாக நிறுத்தம்",history:"எச்சரிக்கை வரலாறு",
+ addFirst:"முதலில் நம்பகமான தொடர்பைச் சேர்க்கவும்",addFirstBody:"SOS-க்கு குறைந்தது ஒரு நம்பகமான தொடர்பு தேவை. கீழே அவசர சேவைகளை அழைக்கலாம்.",
+ trusted:"நம்பகமான தொடர்புகள்",add:"தொடர்பைச் சேர்",name:"பெயர்",phone:"தொலைபேசி (நாட்டு குறியீட்டுடன்)",rel:"உறவு",save:"சேமி",cancel:"ரத்து",edit:"திருத்து",del:"நீக்கு",
+ noContacts:"தொடர்புகள் இல்லை. உங்கள் எச்சரிக்கையைப் பெற வேண்டிய குடும்பத்தினர் அல்லது நண்பர்களைச் சேர்க்கவும்.",phoneBad:"சரியான எண்ணை உள்ளிடவும், எ.கா. +919876543210.",nameBad:"பெயரை உள்ளிடவும்.",
+ tipsTitle:"தனிப்பட்ட பாதுகாப்பு குறிப்புகள்",profileTitle:"உங்கள் சுயவிவரம்",yourName:"உங்கள் பெயர்",yourPhone:"உங்கள் தொலைபேசி எண்",region:"அவசர எண்கள் நாடு",saved:"சேமிக்கப்பட்டது",
+ prefs:"விருப்பங்கள்",histEmpty:"இதுவரை எச்சரிக்கைகள் இல்லை.",clear:"வரலாற்றை அழி",
+ cd1:"SOS அனுப்ப இன்னும்",cd2:"விநாடிகள்",cancelSOS:"SOS ரத்து செய்",
+ locAsk:"இருப்பிடத்தைப் பகிரவா?",locAskBody:"எச்சரிக்கையில் Google Maps இணைப்பைச் சேர்க்க, Smart Safety உங்கள் GPS நிலையை ஒருமுறை படிக்க விரும்புகிறது. அது உங்கள் சாதனத்திலேயே இருக்கும்; நீங்கள் தேர்ந்தெடுத்தவர்களுக்கு மட்டுமே செல்லும்.",allow:"இருப்பிடத்தை அனுமதி",skipLoc:"இருப்பிடம் இல்லாமல் தொடர்",
+ locating:"உங்கள் இருப்பிடத்தைத் தேடுகிறது…",locFail:"இருப்பிடம் கிடைக்கவில்லை. எச்சரிக்கையில் அது குறிப்பிடப்படும்.",
+ sendTitle:"எச்சரிக்கை தயார் — இப்போது அனுப்பவும்",sendBody:"செய்தி சென்றடைந்ததை உங்கள் போனால் உறுதிப்படுத்த முடியாது. ஒவ்வொருவருக்கும் ஒரு வழியைத் தொட்டு, அந்த செயலியில் அனுப்பி, பின் ‘அனுப்பினேன்’ எனக் குறிக்கவும்.",
+ sms:"SMS",wa:"WhatsApp",shareBtn:"பகிர்…",copy:"செய்தியை நகலெடு",copied:"நகலெடுக்கப்பட்டது",markSent:"அனுப்பினேன்",markedSent:"அனுப்பியதாக நீங்கள் குறித்தீர்கள்",opened:"செயலியில் திறக்கப்பட்டது — உறுதியில்லை",pending:"இன்னும் அனுப்பவில்லை",
+ done:"முடிந்தது",call112:"இப்போது அவசர அழைப்பு",simSend:"அனுப்புவதை உருவகப்படுத்து (டெமோ)",simDone:"உருவகம் மட்டுமே — எதுவும் அனுப்பப்படவில்லை",
+ stCancelled:"அனுப்பும் முன் ரத்து செய்யப்பட்டது",stPrepared:"தயார் — அனுப்பவில்லை",stOpened:"செய்தி செயலியில் திறக்கப்பட்டது — சென்றடைந்ததா என உறுதியில்லை",stConfirmed:"அனுப்பியதாக நீங்கள் உறுதி செய்தீர்கள்",stSim:"டெமோ — உருவகம், எதுவும் அனுப்பப்படவில்லை",
+ shareLive:"என் நேரடி இருப்பிடத்தைப் பகிர்",stopLive:"பகிர்வை நிறுத்து",liveOn:"இந்த சாதனத்தில் நிலை புதுப்பிக்கப்படுகிறது",openMaps:"Google Maps-இல் திற",copyLink:"இணைப்பை நகலெடு",
+ liveNote:"இணைப்பு நீங்கள் பகிரும் நேரத்தின் நிலையைக் காட்டும். பிறருக்கு தொடர்ச்சியான கண்காணிப்புக்கு Firebase பின்புலம் தேவை.",
+ gpsDenied:"இருப்பிட அனுமதி மறுக்கப்பட்டது. உலாவி அமைப்புகளில் இயக்கலாம்.",gpsNo:"இந்த சாதனம் அல்லது உலாவியில் GPS ஆதரவு இல்லை.",acc:"துல்லியம்",
+ callTitle:"அவசர சேவைகள்",callNote:"எண்ணைத் தொட்டால் உங்கள் டயலர் திறக்கும். நீங்கள் இருக்கும் இடத்திற்கு சரியானதா என சரிபார்க்கவும்.",
+ shakeTitle:"குலுக்கி எச்சரிக்க",shakeBody:"இயக்கினால், இந்த செயலி திறந்திருக்கும்போது போனை வேகமாக மூன்று முறை குலுக்கினால் SOS எண்ணிக்கை தொடங்கும். எப்போதும் ரத்து செய்யலாம்.",shakeOn:"குலுக்கல் எச்சரிக்கை இயக்கத்தில்",shakeOff:"குலுக்கல் எச்சரிக்கை நிறுத்தத்தில்",shakeNo:"இயக்க உணரிகள் இல்லை அல்லது அனுமதி மறுக்கப்பட்டது.",shakeAsk:"இயக்க, இயக்க அணுகலை அனுமதிக்கவும்.",shakeTrig:"குலுக்கல் கண்டறியப்பட்டது — SOS தொடங்குகிறது",
+ demoTitle:"ஹேக்கத்தான் டெமோ முறை",demoBanner:"டெமோ முறை — இருப்பிடம் போலி; யாருக்கும் எதுவும் அனுப்பப்படாது.",
+ demoSteps:["மாதிரி தொடர்புகளை ஏற்றவும் (டெமோவில் மட்டும்).","SOS பொத்தான் அல்லது “குலுக்கலை உருவகப்படுத்து” தொடவும்.","எண்ணிக்கையையும், Google Maps இணைப்புடன் எச்சரிக்கையையும் பார்க்கவும்.","எச்சரிக்கை வரலாற்றில் ‘டெமோ’ எனக் குறிக்கப்பட்ட பதிவைப் பார்க்கவும்."],
+ loadSample:"மாதிரி தொடர்புகளை ஏற்று",simShake:"குலுக்கலை உருவகப்படுத்து",exitDemo:"டெமோவிலிருந்து வெளியேறு",
+ aboutTitle:"இந்த முன்மாதிரி எப்படி செயல்படுகிறது",about:["முழுவதும் உலாவியில் இயங்குகிறது; தரவு இந்த சாதனத்தில் மட்டும்.","GPS-க்கு HTTPS அல்லது localhost மற்றும் உங்கள் அனுமதி தேவை.","SMS, WhatsApp செய்தி தயாராக திறக்கும்; அனுப்பும் பொத்தானை நீங்கள் அழுத்த வேண்டும்.","உள்நுழைவு, ஒத்திசைவு, நேரடி கண்காணிப்புக்கு Firebase Auth மற்றும் Firestore சேர்க்கலாம்."],
+ msgHead:"SOS! எனக்கு உதவி தேவை.",msgLoc:"என் இருப்பிடம்",msgNoLoc:"என் இருப்பிடத்தைப் படிக்க முடியவில்லை.",msgAt:"நேரம்",msgFrom:"அனுப்புநர்",
+ members:"தொடர்புகள்",none:"இல்லை"}
+};
+const TIPS={
+ en:[["Share your plan","Tell someone your route and when you expect to arrive. Update them if it changes."],
+     ["Stay aware","Keep one earbud out and your phone away from your face when walking alone, especially at night."],
+     ["Trust your instincts","If a place or person feels wrong, leave early. You do not owe anyone an explanation."],
+     ["Use well-lit routes","Prefer busy, lit streets over shortcuts. Wait for rides inside shops or stations."],
+     ["Check your ride","Confirm the plate number and driver name before you get in. Share the trip with a contact."],
+     ["Keep your phone ready","Charge above 30% before going out. Know where your SOS button and emergency numbers are."],
+     ["Make noise","Shout clearly: “Back off!” or “Call the police!” Attention scares most threats away."],
+     ["Pick safe spots","If followed, walk into a shop, petrol station or crowded place. Do not go home alone."],
+     ["Know the numbers","In India dial 112 for any emergency, 100 police, 108 ambulance, 1091 women helpline."],
+     ["Agree a code word","Choose a word with family that means “I need help, call me now.”"]],
+ ta:[["உங்கள் திட்டத்தைப் பகிருங்கள்","எந்த வழியில் செல்கிறீர்கள், எப்போது சேர்வீர்கள் என யாருக்காவது சொல்லுங்கள். மாறினால் தெரிவியுங்கள்."],
+     ["விழிப்புடன் இருங்கள்","தனியாக நடக்கும்போது, குறிப்பாக இரவில், ஒரு காதை திறந்து வைத்து போனைப் பார்த்தபடி நடப்பதைத் தவிர்க்கவும்."],
+     ["உள்ளுணர்வை நம்புங்கள்","ஒரு இடமோ நபரோ சரியில்லை என்று தோன்றினால் உடனே விலகுங்கள். விளக்கம் சொல்ல வேண்டியதில்லை."],
+     ["வெளிச்சமான வழிகள்","குறுக்கு வழிகளை விட ஆள்நடமாட்டமும் வெளிச்சமும் உள்ள தெருக்களைத் தேர்ந்தெடுங்கள். வாகனத்திற்காக கடை அல்லது நிலையத்திற்குள் காத்திருங்கள்."],
+     ["வாகனத்தைச் சரிபாருங்கள்","ஏறும் முன் வண்டி எண்ணையும் ஓட்டுநர் பெயரையும் சரிபாருங்கள். பயண விவரத்தை ஒரு தொடர்புடன் பகிருங்கள்."],
+     ["போனைத் தயாராக வையுங்கள்","வெளியே செல்லும் முன் 30%-க்கு மேல் சார்ஜ் செய்யுங்கள். SOS பொத்தானும் அவசர எண்களும் எங்கே என்று தெரிந்து வையுங்கள்."],
+     ["சத்தமிடுங்கள்","“விலகு!” அல்லது “போலீசை அழையுங்கள்!” என்று தெளிவாகக் கத்துங்கள். கவனம் ஈர்ப்பது பெரும்பாலான ஆபத்துகளை விரட்டும்."],
+     ["பாதுகாப்பான இடத்திற்குச் செல்லுங்கள்","யாராவது பின்தொடர்ந்தால் கடை, பெட்ரோல் நிலையம் அல்லது கூட்டமான இடத்திற்குச் செல்லுங்கள். தனியாக வீட்டிற்குச் செல்ல வேண்டாம்."],
+     ["எண்களை அறிந்திருங்கள்","இந்தியாவில் எந்த அவசரத்திற்கும் 112, காவல்துறை 100, ஆம்புலன்ஸ் 108, பெண்கள் உதவி எண் 1091."],
+     ["ரகசிய சொல்","குடும்பத்தினருடன் “எனக்கு உதவி தேவை, உடனே அழையுங்கள்” என்று பொருள்படும் ஒரு சொல்லை முடிவு செய்யுங்கள்."]]
+};
+const ICON={
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>',
+ contacts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.3 3.5 5"/></svg>',
+ tips:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 4.5 3.2 7.6 8 9 4.8-1.4 8-4.5 8-9V6l-8-3Z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>',
+ profile:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c.8-4.2 4-6.5 8-6.5s7.2 2.300 8 6.500"/></svg>',
+ pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.200 7-12a7 7 0 0 0-14 0c0 5.800 7 12 7 12Z"/><circle cx="12" cy="10" r="2.500"/></svg>',
+ phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.500 1.500a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></svg>',
+ shake:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M3.500 9v6M20.500 9v6M1 11v2M23 11v2"/></svg>',
+ clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+ bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.500 10.900c.600.500 1 1.200 1 2.100h5c0-.900.400-1.600 1-2.100A6 6 0 0 0 12 3Z"/></svg>'
+};
+/* ---------- state ---------- */
+function defState(){return{lang:"en",demo:false,profile:{name:"",phone:"",region:"IN"},contacts:[],history:[],shake:false,locConsent:null,sampleLoaded:false}}
+function loadState(){try{const r=JSON.parse(localStorage.getItem(K));return Object.assign(defState(),r||{},{profile:Object.assign(defState().profile,(r&&r.profile)||{})})}catch(e){return defState()}}
+function saveState(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){/* private mode: keep running in memory */}}
+let S=loadState();
+let tab="home",sos=null,watchId=null,live=null,editing=null,shakeCleanup=null;
+const t=k=>(T[S.lang]&&T[S.lang][k]!==undefined)?T[S.lang][k]:T.en[k];
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,10);
+const mapsLink=l=>"https://www.google.com/maps?q="+l.lat.toFixed(6)+","+l.lng.toFixed(6);
+const fmtTime=ts=>new Date(ts).toLocaleString(S.lang==="ta"?"ta-IN":"en-IN",{dateStyle:"medium",timeStyle:"short"});
+function toast(msg){const el=$("#toast");el.textContent=msg;el.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>el.hidden=true,2800)}
+function activeContacts(){return S.demo&&!S.contacts.length?DEMO_CONTACTS:S.contacts}
+function initials(n){return (n||"?").trim().split(/\s+/).slice(0,2).map(w=>w[0]).join("").toUpperCase()}
+function cleanPhone(p){return String(p||"").replace(/[^\d+]/g,"")}
+function validPhone(p){return /^\+?\d{7,15}$/.test(cleanPhone(p))}
+function copyText(txt){
+  const done=()=>toast(t("copied"));
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,()=>fallback())}else fallback();
+  function fallback(){const ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done()}catch(e){}ta.remove()}
+}
+/* ---------- chrome ---------- */
+function renderChrome(){
+  document.documentElement.lang=S.lang==="ta"?"ta":"en";
+  $("#hSub").textContent=t("sub");
+  $("#langBtn").textContent=t("lang");
+  const d=$("#demoBtn");d.textContent=t("demo");d.className="pill"+(S.demo?" on":"");d.setAttribute("aria-pressed",S.demo);
+  const b=$("#demoBanner");b.hidden=!S.demo;b.textContent=t("demoBanner");
+  const items=[["home","home"],["contacts","contacts"],["tips","tips"],["profile","profile"]];
+  $("#nav").innerHTML=items.map(([id,ic])=>`<button data-tab="${id}" class="${tab===id?"active":""}" aria-current="${tab===id}">${ICON[ic]}<span>${esc(t(id))}</span></button>`).join("");
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id==="s-"+tab));
+}
+function render(){
+  renderChrome();
+  if(tab==="home")renderHome();
+  if(tab==="contacts")renderContacts();
+  if(tab==="tips")renderTips();
+  if(tab==="profile")renderProfile();
+}
+function go(x){tab=x;editing=null;render();window.scrollTo(0,0)}
+/* ---------- home ---------- */
+function renderHome(){
+  const n=activeContacts().length;
+  const nums=NUMBERS[S.profile.region]||NUMBERS.IN;
+  const demoCard=S.demo?`<div class="card"><h3>${esc(t("demoTitle"))}</h3><ol class="steps">${T[S.lang].demoSteps.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>
+    <div class="row" style="flex-wrap:wrap;margin-top:10px"><button class="btn sm sec" data-act="sample">${esc(t("loadSample"))}</button><button class="btn sm sec" data-act="simshake">${esc(t("simShake"))}</button><button class="btn sm ghost" data-act="exitdemo">${esc(t("exitDemo"))}</button></div></div>`:"";
+  $("#s-home").innerHTML=`
+    ${demoCard}
+    <div class="sos-wrap">
+      <button class="sos" data-act="sos" aria-label="SOS">SOS<small>${esc(t("sosTap"))}</small></button>
+      <p class="muted" style="text-align:center;margin:18px 6px 4px">${esc(t("sosHint"))}</p>
+      <p style="margin:4px 0 10px"><span class="chip ${n?"g":"a"}">${n} ${esc(t("members"))}</span></p>
+    </div>
+    ${n?"":`<div class="card" style="border-color:#f0d58a;background:#fffaf0"><h3>${esc(t("addFirst"))}</h3><p class="muted" style="margin:0 0 10px">${esc(t("addFirstBody"))}</p><button class="btn sm" data-act="gocontacts">${esc(t("add"))}</button></div>`}
+    <div class="grid2">
+      <button class="tile" data-act="live">${ICON.pin}<b>${esc(t("liveLoc"))}</b><span>${esc(t("liveLocSub"))}</span></button>
+      <button class="tile" data-act="call">${ICON.phone}<b>${esc(t("emgCall"))}</b><span>${esc(t("emgCallSub"))} · ${nums.list[0][0]}</span></button>
+      <button class="tile" data-act="shakeinfo">${ICON.shake}<b>${esc(t("shake"))}</b><span>${S.shake?esc(t("shakeOn")):esc(t("shakeSub"))}</span></button>
+      <button class="tile" data-act="gohistory">${ICON.clock}<b>${esc(t("history"))}</b><span>${S.history.length}</span></button>
+    </div>`;
+}
+/* ---------- contacts ---------- */
+function renderContacts(){
+  const list=S.contacts;
+  const form=editing!==null?(()=>{const c=editing==="new"?{name:"",phone:"",rel:""}:list.find(x=>x.id===editing)||{name:"",phone:"",rel:""};
+    return `<div class="card"><h3>${esc(t("add"))}</h3>
+    <label for="cName">${esc(t("name"))}</label><input id="cName" value="${esc(c.name)}" autocomplete="off">
+    <label for="cPhone">${esc(t("phone"))}</label><input id="cPhone" type="tel" inputmode="tel" value="${esc(c.phone)}" placeholder="+91…">
+    <label for="cRel">${esc(t("rel"))}</label><input id="cRel" value="${esc(c.rel)}">
+    <p id="cErr" class="muted" style="color:var(--red);margin:8px 0 0" role="alert"></p>
+    <div class="row" style="margin-top:12px"><button class="btn grow" data-act="savecontact">${esc(t("save"))}</button><button class="btn ghost" data-act="cancelcontact">${esc(t("cancel"))}</button></div></div>`})():"";
+  $("#s-contacts").innerHTML=`<h2>${esc(t("trusted"))}</h2>${form}
+    ${editing===null?`<button class="btn block" data-act="newcontact" style="margin-bottom:12px">+ ${esc(t("add"))}</button>`:""}
+    <div class="list">${list.length?list.map(c=>`<div class="person"><div class="avatar">${esc(initials(c.name))}</div><div class="grow"><b>${esc(c.name)}</b><div class="muted">${esc(c.phone)}${c.rel?" · "+esc(c.rel):""}</div></div>
+      <button class="btn sm sec" data-act="editcontact" data-id="${c.id}">${esc(t("edit"))}</button><button class="btn sm ghost" data-act="delcontact" data-id="${c.id}">${esc(t("del"))}</button></div>`).join(""):`<p class="muted">${esc(t("noContacts"))}</p>`}</div>`;
+}
+/* ---------- tips ---------- */
+function renderTips(){
+  const icons=[ICON.clock,ICON.shake,ICON.bulb,ICON.pin,ICON.phone,ICON.phone,ICON.shake,ICON.pin,ICON.phone,ICON.contacts];
+  $("#s-tips").innerHTML=`<h2>${esc(t("tipsTitle"))}</h2>`+TIPS[S.lang].map((x,i)=>`<div class="card tip"><div class="n">${icons[i]}</div><div><h3>${esc(x[0])}</h3><div class="muted">${esc(x[1])}</div></div></div>`).join("");
+}
+/* ---------- profile + history ---------- */
+function statusOf(h){
+  if(h.demo)return{txt:t("stSim"),cls:"w"};
+  if(h.status==="cancelled")return{txt:t("stCancelled"),cls:"c"};
+  const cs=h.contacts||[];const conf=cs.filter(c=>c.state==="confirmed").length,op=cs.filter(c=>c.state==="opened").length;
+  if(conf)return{txt:t("stConfirmed")+` (${conf}/${cs.length})`,cls:"s"};
+  if(op)return{txt:t("stOpened")+` (${op}/${cs.length})`,cls:"w"};
+  return{txt:t("stPrepared"),cls:"c"};
+}
+function renderProfile(){
+  const p=S.profile;
+  $("#s-profile").innerHTML=`<h2>${esc(t("profileTitle"))}</h2>
+   <div class="card"><label for="pName" style="margin-top:0">${esc(t("yourName"))}</label><input id="pName" value="${esc(p.name)}" autocomplete="name">
+    <label for="pPhone">${esc(t("yourPhone"))}</label><input id="pPhone" type="tel" inputmode="tel" value="${esc(p.phone)}" placeholder="+91…">
+    <label for="pRegion">${esc(t("region"))}</label><select id="pRegion">${Object.entries(NUMBERS).map(([k,v])=>`<option value="${k}" ${p.region===k?"selected":""}>${esc(v.name)}</option>`).join("")}</select>
+    <button class="btn block" data-act="saveprofile" style="margin-top:14px">${esc(t("save"))}</button></div>
+   <div class="card"><h3>${esc(t("trusted"))}</h3><p class="muted" style="margin:0 0 8px">${S.contacts.length} ${esc(t("members"))}</p><button class="btn sm sec" data-act="gocontacts">${esc(t("contacts"))}</button></div>
+   <div class="card"><h3>${esc(t("prefs"))}</h3><div class="switch"><span>${esc(t("shake"))}</span><input type="checkbox" id="shakeToggle" ${S.shake?"checked":""} aria-label="${esc(t("shake"))}"></div><p class="muted" style="margin:6px 0 0">${esc(t("shakeBody"))}</p></div>
+   <h2 id="hist">${esc(t("history"))}</h2>
+   <div class="list">${S.history.length?S.history.map(h=>{const st=statusOf(h);return `<div class="hist ${st.cls}"><div class="row"><b class="grow">${esc(fmtTime(h.ts))}</b>${h.demo?'<span class="chip a">Demo</span>':""}</div><div class="muted">${esc(st.txt)}</div>${h.loc?`<a href="${esc(mapsLink(h.loc))}" target="_blank" rel="noopener" style="font-size:14px">${esc(t("openMaps"))}</a>`:""}</div>`}).join(""):`<p class="muted">${esc(t("histEmpty"))}</p>`}</div>
+   ${S.history.length?`<button class="btn sm ghost" data-act="clearhist" style="margin-top:10px">${esc(t("clear"))}</button>`:""}
+   <div class="card" style="margin-top:16px"><h3>${esc(t("aboutTitle"))}</h3><ul class="steps">${T[S.lang].about.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+}
+/* ---------- overlay helper ---------- */
+function showSheet(html){const o=$("#overlay");o.innerHTML=`<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;o.hidden=false}
+function closeSheet(){const o=$("#overlay");o.hidden=true;o.innerHTML=""}
+/* ---------- location ---------- */
+function geoOK(){return "geolocation" in navigator}
+function getPosition(timeout){
+  return new Promise(res=>{
+    if(!geoOK())return res({err:"unsupported"});
+    navigator.geolocation.getCurrentPosition(p=>res({loc:{lat:p.coords.latitude,lng:p.coords.longitude,acc:Math.round(p.coords.accuracy)}}),e=>res({err:e.code===1?"denied":"failed"}),{enableHighAccuracy:true,timeout:timeout||9000,maximumAge:15000});
+  });
+}
+function askLocConsent(){
+  return new Promise(res=>{
+    showSheet(`<h3>${esc(t("locAsk"))}</h3><p class="muted">${esc(t("locAskBody"))}</p>
+      <button class="btn block" id="lcAllow">${esc(t("allow"))}</button><button class="btn ghost block" id="lcSkip" style="margin-top:8px">${esc(t("skipLoc"))}</button>`);
+    $("#lcAllow").onclick=()=>{S.locConsent=true;saveState();closeSheet();res(true)};
+    $("#lcSkip").onclick=()=>{S.locConsent=false;saveState();closeSheet();res(false)};
+  });
+}
+async function ensureLocation(){
+  if(S.demo)return{loc:DEMO_LOC};
+  if(S.locConsent!==true){const ok=await askLocConsent();if(!ok)return{err:"skipped"}}
+  return getPosition();
+}
+/* ---------- live location ---------- */
+function startLive(){
+  if(S.demo){live={...DEMO_LOC};showLive();return}
+  (async()=>{
+    if(S.locConsent!==true){const ok=await askLocConsent();if(!ok)return}
+    if(!geoOK()){toast(t("gpsNo"));return}
+    live=null;showLive();
+    watchId=navigator.geolocation.watchPosition(p=>{live={lat:p.coords.latitude,lng:p.coords.longitude,acc:Math.round(p.coords.accuracy)};showLive()},e=>{stopLive();toast(e.code===1?t("gpsDenied"):t("locFail"))},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+  })();
+}
+function stopLive(){if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null}live=null;closeSheet()}
+function showLive(){
+  const body=live?`<iframe class="map" title="Map" loading="lazy" src="https://maps.google.com/maps?q=${live.lat},${live.lng}&z=16&output=embed"></iframe>
+    <div class="kv"><span>GPS</span><b>${live.lat.toFixed(5)}, ${live.lng.toFixed(5)}</b></div><div class="kv"><span>${esc(t("acc"))}</span><b>±${live.acc} m</b></div>
+    <div class="row" style="flex-wrap:wrap;margin-top:10px"><a class="btn sm" href="${esc(mapsLink(live))}" target="_blank" rel="noopener" style="text-decoration:none">${esc(t("openMaps"))}</a><button class="btn sm sec" id="lvCopy">${esc(t("copyLink"))}</button>${navigator.share?`<button class="btn sm sec" id="lvShare">${esc(t("shareBtn"))}</button>`:""}</div>`
+    :`<p class="muted">${esc(t("locating"))}</p>`;
+  showSheet(`<h3>${esc(t("liveLoc"))}</h3><p class="muted" style="margin:0 0 8px">${esc(live?t("liveOn"):"")}</p>${body}<p class="note" style="margin-top:10px">${esc(t("liveNote"))}</p><button class="btn ghost block" id="lvStop" style="margin-top:10px">${esc(t("stopLive"))}</button>`);
+  $("#lvStop").onclick=stopLive;
+  if(live){$("#lvCopy").onclick=()=>copyText(mapsLink(live));const sh=$("#lvShare");if(sh)sh.onclick=()=>navigator.share({title:"Smart Safety",text:t("msgLoc")+": "+mapsLink(live),url:mapsLink(live)}).catch(()=>{})}
+}
+/* ---------- emergency call ---------- */
+function showCall(){
+  const nums=NUMBERS[S.profile.region]||NUMBERS.IN;
+  showSheet(`<h3>${esc(t("callTitle"))} — ${esc(nums.name)}</h3><p class="note">${esc(t("callNote"))}</p><div class="list" style="margin-top:10px">${nums.list.map(n=>`<a class="person" href="tel:${n[0]}" style="text-decoration:none;color:inherit"><div class="avatar" style="background:#fde1de;color:var(--red-d)">${ICON.phone.replace("<svg",'<svg width="20" height="20"')}</div><div class="grow"><b>${esc(S.lang==="ta"?n[3]:n[2])}</b></div><b style="font-size:22px;color:var(--red-d)">${n[0]}</b></a>`).join("")}</div><button class="btn ghost block" id="clClose" style="margin-top:12px">${esc(t("done"))}</button>`);
+  $("#clClose").onclick=closeSheet;
+}
+/* ---------- SOS flow ---------- */
+function startSOS(){
+  if(sos)return;
+  const cs=activeContacts();
+  if(!cs.length){toast(t("addFirst"));go("contacts");return}
+  sos={phase:"count",left:5,cancelled:false};
+  showCount();
+  sos.timer=setInterval(()=>{
+    sos.left--;
+    if(sos.left<=0){clearInterval(sos.timer);runSend()}else showCount();
+    if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}
+  },1000);
+}
+function showCount(){
+  showSheet(`<p class="muted" style="text-align:center;margin:0">${esc(t("cd1"))}</p><div class="count" aria-live="polite">${sos.left}</div><p class="muted" style="text-align:center;margin:0 0 14px">${esc(t("cd2"))}</p><button class="btn block" id="cdCancel" style="font-size:18px;padding:16px">${esc(t("cancelSOS"))}</button>`);
+  $("#cdCancel").onclick=cancelSOS;
+}
+function cancelSOS(){
+  if(!sos)return;clearInterval(sos.timer);
+  S.history.unshift({id:uid(),ts:Date.now(),demo:S.demo,status:"cancelled",loc:null,contacts:[]});saveState();
+  sos=null;closeSheet();toast(t("stCancelled"));if(tab==="profile")render();
+}
+function buildMessage(loc,err){
+  const nm=S.profile.name||(S.lang==="ta"?"ஒரு நண்பர்":"A contact");
+  const when=fmtTime(Date.now());
+  const en=`SOS! I need help.\nFrom: ${nm}${S.profile.phone?" ("+S.profile.phone+")":""}\n`+(loc?`My location: ${mapsLink(loc)} (accuracy ±${loc.acc} m)\n`:`My location could not be read.\n`)+`Time: ${when}`;
+  const ta=`SOS! எனக்கு உதவி தேவை.\nஅனுப்புநர்: ${nm}\n`+(loc?`என் இருப்பிடம்: ${mapsLink(loc)}\n`:`என் இருப்பிடத்தைப் படிக்க முடியவில்லை.\n`);
+  return S.demo?"[DEMO — NOT SENT]\n"+en:en+"\n\n"+ta;
+}
+async function runSend(){
+  showSheet(`<h3>${esc(t("locating"))}</h3><p class="muted">…</p>`);
+  const r=await ensureLocation();
+  if(!sos)return;
+  const loc=r.loc||null;
+  if(!loc)toast(t("locFail"));
+  const cs=activeContacts();
+  const entry={id:uid(),ts:Date.now(),demo:S.demo,status:"prepared",loc,msg:buildMessage(loc),contacts:cs.map(c=>({id:c.id,name:c.name,phone:c.phone,state:"pending"}))};
+  S.history.unshift(entry);saveState();
+  sos={phase:"send",entry};
+  showSend();
+}
+function showSend(){
+  const e=sos.entry;const nums=NUMBERS[S.profile.region]||NUMBERS.IN;
+  const rows=e.contacts.map(c=>{
+    const label=c.state==="confirmed"?t("markedSent"):c.state==="opened"?t("opened"):t("pending");
+    const cls=c.state==="confirmed"?"g":c.state==="opened"?"a":"";
+    const body=encodeURIComponent(e.msg);
+    const ph=cleanPhone(c.phone);
+    const act=e.demo?"":`<div class="row" style="flex-wrap:wrap;margin-top:8px">
+        <a class="btn sm" data-open="${c.id}" href="sms:${esc(ph)}?body=${body}" style="text-decoration:none">${esc(t("sms"))}</a>
+        <a class="btn sm sec" data-open="${c.id}" href="https://wa.me/${esc(ph.replace(/^\+/,""))}?text=${body}" target="_blank" rel="noopener" style="text-decoration:none">${esc(t("wa"))}</a>
+        <button class="btn sm ghost" data-mark="${c.id}" ${c.state==="confirmed"?"disabled":""}>${esc(t("markSent"))}</button></div>`;
+    return `<div class="person" style="flex-direction:column;align-items:stretch"><div class="row"><div class="avatar">${esc(initials(c.name))}</div><div class="grow"><b>${esc(c.name)}</b><div class="muted">${esc(c.phone)}</div></div><span class="chip ${cls}">${esc(label)}</span></div>${act}</div>`;
+  }).join("");
+  const map=e.loc?`<iframe class="map" title="Map" loading="lazy" style="height:150px;margin:10px 0" src="https://maps.google.com/maps?q=${e.loc.lat},${e.loc.lng}&z=16&output=embed"></iframe>`:"";
+  showSheet(`<h3>${esc(t("sendTitle"))}</h3><p class="note">${esc(e.demo?t("simDone"):t("sendBody"))}</p>${map}
+    <div class="msgbox">${esc(e.msg)}</div>
+    <div class="row" style="flex-wrap:wrap;margin:10px 0">
+      <button class="btn sm sec" id="snCopy">${esc(t("copy"))}</button>${(!e.demo&&navigator.share)?`<button class="btn sm sec" id="snShare">${esc(t("shareBtn"))}</button>`:""}
+      ${e.demo?`<button class="btn sm" id="snSim">${esc(t("simSend"))}</button>`:""}</div>
+    <div class="list">${rows}</div>
+    <a class="btn red block" href="tel:${nums.list[0][0]}" style="text-decoration:none;text-align:center;margin-top:12px">${esc(t("call112"))} (${nums.list[0][0]})</a>
+    <button class="btn ghost block" id="snDone" style="margin-top:8px">${esc(t("done"))}</button>`);
+  $("#snCopy").onclick=()=>copyText(e.msg);
+  const sh=$("#snShare");if(sh)sh.onclick=()=>navigator.share({title:"SOS",text:e.msg}).catch(()=>{});
+  const sim=$("#snSim");if(sim)sim.onclick=()=>{e.contacts.forEach(c=>c.state="simulated");saveState();toast(t("simDone"))};
+  document.querySelectorAll("[data-open]").forEach(a=>a.addEventListener("click",()=>{const c=e.contacts.find(x=>x.id===a.dataset.open);if(c&&c.state==="pending"){c.state="opened";saveState();setTimeout(()=>sos&&showSend(),400)}}));
+  document.querySelectorAll("[data-mark]").forEach(b=>b.onclick=()=>{const c=e.contacts.find(x=>x.id===b.dataset.mark);if(c){c.state="confirmed";saveState();showSend()}});
+  $("#snDone").onclick=()=>{sos=null;closeSheet();if(tab==="profile")render()};
+}
+/* ---------- shake ---------- */
+function enableShake(){
+  return new Promise(async res=>{
+    if(!("DeviceMotionEvent" in window)){toast(t("shakeNo"));return res(false)}
+    try{
+      if(typeof DeviceMotionEvent.requestPermission==="function"){const r=await DeviceMotionEvent.requestPermission();if(r!=="granted"){toast(t("shakeNo"));return res(false)}}
+    }catch(e){toast(t("shakeNo"));return res(false)}
+    attachShake();res(true);
+  });
+}
+function attachShake(){
+  detachShake();
+  let hits=[],last=0,cool=0;
+  const h=e=>{
+    const a=e.accelerationIncludingGravity;if(!a)return;
+    const mag=Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2);
+    const now=Date.now();
+    if(Math.abs(mag-9.8)>16&&now-last>180){last=now;hits=hits.filter(x=>now-x<1800);hits.push(now);
+      if(hits.length>=3&&now>cool&&!sos){hits=[];cool=now+10000;toast(t("shakeTrig"));startSOS()}}
+  };
+  window.addEventListener("devicemotion",h);
+  shakeCleanup=()=>window.removeEventListener("devicemotion",h);
+}
+function detachShake(){if(shakeCleanup){shakeCleanup();shakeCleanup=null}}
+/* ---------- events ---------- */
+document.addEventListener("click",async ev=>{
+  const nav=ev.target.closest("[data-tab]");if(nav){go(nav.dataset.tab);return}
+  const b=ev.target.closest("[data-act]");if(!b)return;
+  const a=b.dataset.act,id=b.dataset.id;
+  if(a==="sos")startSOS();
+  else if(a==="live")startLive();
+  else if(a==="call")showCall();
+  else if(a==="gocontacts")go("contacts");
+  else if(a==="gohistory"){go("profile");setTimeout(()=>{const h=$("#hist");if(h)h.scrollIntoView()},50)}
+  else if(a==="shakeinfo"){go("profile");setTimeout(()=>{const x=$("#shakeToggle");if(x)x.scrollIntoView({block:"center"})},50)}
+  else if(a==="newcontact"){editing="new";renderContacts()}
+  else if(a==="editcontact"){editing=id;renderContacts()}
+  else if(a==="cancelcontact"){editing=null;renderContacts()}
+  else if(a==="delcontact"){S.contacts=S.contacts.filter(c=>c.id!==id);saveState();renderContacts()}
+  else if(a==="savecontact"){
+    const name=$("#cName").value.trim(),phone=$("#cPhone").value.trim(),rel=$("#cRel").value.trim(),err=$("#cErr");
+    if(!name){err.textContent=t("nameBad");return}
+    if(!validPhone(phone)){err.textContent=t("phoneBad");return}
+    if(editing==="new")S.contacts.push({id:uid(),name,phone:cleanPhone(phone),rel});
+    else{const c=S.contacts.find(x=>x.id===editing);if(c){c.name=name;c.phone=cleanPhone(phone);c.rel=rel}}
+    saveState();editing=null;renderContacts();toast(t("saved"));
+  }
+  else if(a==="saveprofile"){S.profile.name=$("#pName").value.trim();S.profile.phone=$("#pPhone").value.trim();S.profile.region=$("#pRegion").value;saveState();toast(t("saved"))}
+  else if(a==="clearhist"){S.history=[];saveState();renderProfile()}
+  else if(a==="sample"){if(!S.contacts.length){S.contacts=DEMO_CONTACTS.map(c=>({...c,id:uid()}));saveState()}toast(t("saved"));render()}
+  else if(a==="simshake"){startSOS()}
+  else if(a==="exitdemo"){S.demo=false;saveState();render()}
+});
+document.addEventListener("change",async ev=>{
+  if(ev.target.id==="shakeToggle"){
+    if(ev.target.checked){const ok=await enableShake();S.shake=ok;ev.target.checked=ok;if(ok)toast(t("shakeOn"))}
+    else{S.shake=false;detachShake();toast(t("shakeOff"))}
+    saveState();
+  }
+});
+$("#langBtn").onclick=()=>{S.lang=S.lang==="en"?"ta":"en";saveState();render()};
+$("#demoBtn").onclick=()=>{S.demo=!S.demo;saveState();render();if(S.demo)go("home")};
+/* FIREBASE (optional, not enabled in this prototype):
+   import {initializeApp} from "firebase/app"; import {getAuth} from "firebase/auth"; import {getFirestore} from "firebase/firestore";
+   Use Auth for sign-in, Firestore for contacts/history sync, and a cloud function (e.g. FCM or an SMS provider)
+   to send alerts server-side. Only then can delivery be confirmed by a provider receipt. */
+if("serviceWorker" in navigator){/* intentionally not registered: keeps the single-file demo simple */}
+if(S.shake){/* iOS needs a tap to re-grant motion access; Android re-attaches directly */
+  if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission!=="function")attachShake();
+  else S.shake=false;
+}
+render();
+</script>
+</body>
+</html>
